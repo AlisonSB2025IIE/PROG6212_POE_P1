@@ -1,0 +1,45 @@
+name: Validate Repository Structure
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check required documentation files
+        shell: bash
+        run: |
+          required_files=(
+            "docs/Detailed_Narrative_and_Business_Rules.pdf"
+            "docs/RaceDay_API_Endpoint_Plan.pdf"
+            "docs/RaceDay_Database.sql"
+          )
+
+          if [ ! -d "docs" ]; then
+            echo "ERROR: The docs folder is missing."
+            exit 1
+          fi
+
+          for file in "${required_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "ERROR: Required file is missing: $file"
+              exit 1
+            fi
+          done
+
+          if ! find docs -maxdepth 1 -type f \( -iname "*erd*.png" -o -iname "*erd*.drawio" \) | grep -q .; then
+            echo "ERROR: An ERD image or Draw.io file is missing."
+            exit 1
+          fi
+
+          echo "Success: Repository structure and required documentation files are present."
